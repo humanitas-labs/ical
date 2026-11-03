@@ -23,8 +23,12 @@ extension ICalApp {
     /// Looks up the event by ID, applies the requested changes, and saves it back to EventKit.
     /// - Returns: The updated event's identifier on success, or a `CLIError` on failure.
     private func editEvent(with options: EditOptions) -> Result<String?, CLIError> {
-        guard let event = store.event(withIdentifier: options.id) else {
-            return .failure(.message("Event not found for id: \(options.id)"))
+        let event: EKEvent
+        switch resolveEvent(id: options.id, occurrenceInput: options.occurrenceInput, selection: options.recurrenceSpan) {
+        case .success(let resolved):
+            event = resolved
+        case .failure(let error):
+            return .failure(error)
         }
 
         let wasRecurring = isRecurringEvent(event)

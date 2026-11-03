@@ -21,11 +21,12 @@ extension ICalApp {
     /// Fails if zero or multiple events match a title+start selector.
     private func removeEvent(with options: RemoveOptions) -> Result<Void, CLIError> {
         if let id = options.id {
-            guard let event = store.event(withIdentifier: id) else {
-                return .failure(.message("Event not found for id: \(id)"))
+            switch resolveEvent(id: id, occurrenceInput: options.occurrenceInput, selection: options.recurrenceSpan) {
+            case .success(let event):
+                return removeEvent(event, selection: options.recurrenceSpan)
+            case .failure(let error):
+                return .failure(error)
             }
-
-            return removeEvent(event, selection: options.recurrenceSpan)
         }
 
         guard let title = options.title, let startInput = options.startInput else {

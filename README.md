@@ -62,6 +62,20 @@ ical week
 
 Output is sorted by start time with all-day events first. Empty fields are omitted. If no events exist, it prints `No events.`
 
+Each event prints an `ID:` line with its EventKit identifier, which `edit` and `remove` take as `--id`. Every instance of a recurring series shares one ID, so recurring events also print an `Occurrence:` line (the instance's start, ISO 8601). Pass it as `--occurrence` to target that instance:
+
+```bash
+ical week
+# 09:00 - 09:30  Standup
+# Calendar: Work
+# ID: 232D287D-...:4677270e-...
+# Occurrence: 2026-11-03T09:00:00-08:00
+
+ical edit --id "232D287D-...:4677270e-..." --occurrence "2026-11-03T09:00:00-08:00" --start "2026-11-03 10:00" --end "2026-11-03 10:30" --this-only
+```
+
+Without `--occurrence`, an ID resolves to the series' first occurrence, so `--this-only` on a recurring event requires `--occurrence`. `--all-future` with `--occurrence` applies from that instance onward.
+
 ### Add event
 
 ```bash
@@ -110,7 +124,7 @@ Or by title + exact start:
 ical remove --title "Meeting with Luke" --start "today 14:00" --calendar "Work"
 ```
 
-For recurring events, use `--this-only` or `--all-future` to choose how removal is applied.
+For recurring events, use `--this-only` or `--all-future` to choose how removal is applied, and `--occurrence <datetime>` (from the listing) to pick the instance.
 
 ### Edit event
 

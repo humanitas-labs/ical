@@ -217,6 +217,7 @@ struct CommandParser {
     /// Parses `--key value` pairs from the argument list into `RemoveOptions`.
     private func parseRemoveOptions(_ arguments: [String]) -> Result<RemoveOptions, CLIError> {
         var id: String?
+        var occurrenceInput: String?
         var title: String?
         var startInput: String?
         var calendarName: String?
@@ -240,6 +241,15 @@ struct CommandParser {
                     return .failure(.message("Missing value for --id"))
                 }
                 id = finalValue
+
+            case "--occurrence":
+                guard occurrenceInput == nil else {
+                    return .failure(.message("Duplicate option: --occurrence"))
+                }
+                guard let value = collectOptionValue(from: arguments, index: &index), let finalValue = nonEmpty(value) else {
+                    return .failure(.message("Missing value for --occurrence"))
+                }
+                occurrenceInput = finalValue
 
             case "--title":
                 guard title == nil else {
@@ -294,6 +304,10 @@ struct CommandParser {
             recurrenceSpan = .automatic
         }
 
+        guard occurrenceInput == nil || id != nil else {
+            return .failure(.message("--occurrence requires --id."))
+        }
+
         if let id {
             guard title == nil, startInput == nil, calendarName == nil else {
                 return .failure(.message("Use either --id or --title/--start selector, not both."))
@@ -302,6 +316,7 @@ struct CommandParser {
             return .success(
                 RemoveOptions(
                     id: id,
+                    occurrenceInput: occurrenceInput,
                     title: nil,
                     startInput: nil,
                     calendarName: nil,
@@ -321,6 +336,7 @@ struct CommandParser {
         return .success(
             RemoveOptions(
                 id: nil,
+                occurrenceInput: nil,
                 title: title,
                 startInput: startInput,
                 calendarName: calendarName,
@@ -332,6 +348,7 @@ struct CommandParser {
     /// Parses `--key value` pairs from the argument list into `EditOptions`.
     private func parseEditOptions(_ arguments: [String]) -> Result<EditOptions, CLIError> {
         var id: String?
+        var occurrenceInput: String?
         var title: String?
         var startInput: String?
         var endInput: String?
@@ -365,6 +382,15 @@ struct CommandParser {
                     return .failure(.message("Missing value for --id"))
                 }
                 id = finalValue
+
+            case "--occurrence":
+                guard occurrenceInput == nil else {
+                    return .failure(.message("Duplicate option: --occurrence"))
+                }
+                guard let value = collectOptionValue(from: arguments, index: &index), let finalValue = nonEmpty(value) else {
+                    return .failure(.message("Missing value for --occurrence"))
+                }
+                occurrenceInput = finalValue
 
             case "--title":
                 guard title == nil else {
@@ -535,6 +561,7 @@ struct CommandParser {
         return .success(
             EditOptions(
                 id: id,
+                occurrenceInput: occurrenceInput,
                 title: title,
                 startInput: startInput,
                 endInput: endInput,

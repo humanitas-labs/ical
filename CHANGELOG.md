@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-11-02
+
+- `today`, `tomorrow`, and `week` now print each event's `ID:` so listings lead directly to `edit`/`remove --id` (issue #3).
+- Recurring events also print an `Occurrence:` token; `edit` and `remove` accept `--occurrence <datetime>` to target that instance instead of the series' first occurrence.
+- `--this-only` on a recurring event now requires `--occurrence`, since it previously changed the first occurrence silently.
+
 ## [0.2.0] - 2026-07-14
 
 - Added Reminders support via the `reminders` subcommand family: `list`, `add`, `done`, `reopen`, `remove`, `edit`.

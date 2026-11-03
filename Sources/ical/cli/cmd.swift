@@ -86,6 +86,7 @@ struct AddOptions {
 /// Options for the `remove` subcommand. Events can be targeted by `id` or by `title`+`start`.
 struct RemoveOptions {
     let id: String?
+    let occurrenceInput: String?
     let title: String?
     let startInput: String?
     let calendarName: String?
@@ -95,6 +96,7 @@ struct RemoveOptions {
 /// Options for the `edit` subcommand. Only non-nil fields are applied as updates.
 struct EditOptions {
     let id: String
+    let occurrenceInput: String?
     let title: String?
     let startInput: String?
     let endInput: String?

@@ -380,4 +380,47 @@ final class CommandParserTests: XCTestCase {
             XCTFail("Expected parse error")
         }
     }
+
+    func testParsesEditWithOccurrence() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "edit", "--id", "ABC:123", "--occurrence", "2026-11-03T14:00:00-08:00",
+            "--title", "Moved", "--this-only"
+        ])
+
+        switch result {
+        case .command(.edit(let options)):
+            XCTAssertEqual(options.id, "ABC:123")
+            XCTAssertEqual(options.occurrenceInput, "2026-11-03T14:00:00-08:00")
+            XCTAssertEqual(options.recurrenceSpan, .thisOnly)
+        default:
+            XCTFail("Expected edit command")
+        }
+    }
+
+    func testParsesRemoveWithOccurrence() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "remove", "--id", "ABC:123", "--occurrence", "2026-11-03T14:00:00-08:00", "--this-only"
+        ])
+
+        switch result {
+        case .command(.remove(let options)):
+            XCTAssertEqual(options.id, "ABC:123")
+            XCTAssertEqual(options.occurrenceInput, "2026-11-03T14:00:00-08:00")
+        default:
+            XCTFail("Expected remove command")
+        }
+    }
+
+    func testRemoveRejectsOccurrenceWithoutId() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "remove", "--title", "Standup", "--start", "today 09:00", "--occurrence", "today 09:00"
+        ])
+
+        switch result {
+        case .error(let message):
+            XCTAssertTrue(message.contains("--occurrence requires --id"))
+        default:
+            XCTFail("Expected error")
+        }
+    }
 }

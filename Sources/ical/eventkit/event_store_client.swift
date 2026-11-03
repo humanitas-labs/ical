@@ -89,4 +89,43 @@ extension ICalApp {
         }
         return DateInterval(start: start, end: end)
     }
+
+    /// Resolves an event by identifier, optionally pinned to one occurrence of a recurring series.
+    ///
+    /// Without `occurrenceInput`, a recurring series resolves to its first occurrence (EventKit's behavior),
+    /// so `--this-only` on a recurring event requires `--occurrence` to avoid editing the wrong instance.
+    func resolveEvent(id: String, occurrenceInput: String?, selection: RecurrenceSpanSelection) -> Result<EKEvent, CLIError> {
+        guard let seriesEvent = store.event(withIdentifier: id) else {
+            return .failure(.message("Event not found for id: \(id)"))
+        }
+
+        guard let occurrenceInput else {
+            if seriesEvent.hasRecurrenceRules, selection == .thisOnly {
+                return .failure(.message(
+                    "Event is recurring. Add --occurrence <start> (the Occurrence: value from today/tomorrow/week) to target one instance."
+                ))
+            }
+            return .success(seriesEvent)
+        }
+
+        guard let occurrence = dateParser.parse(occurrenceInput) else {
+            return .failure(.message("Could not parse --occurrence value: \(occurrenceInput)"))
+        }
+
+        guard
+            let windowStart = calendar.date(byAdding: .day, value: -1, to: occurrence),
+            let windowEnd = calendar.date(byAdding: .day, value: 1, to: occurrence)
+        else {
+            return .failure(.message("Could not determine search range for --occurrence."))
+        }
+
+        let predicate = store.predicateForEvents(withStart: windowStart, end: windowEnd, calendars: nil)
+        let candidates = store.events(matching: predicate)
+        let keys = candidates.map { (id: $0.eventIdentifier as String?, occurrenceDate: ($0.occurrenceDate ?? $0.startDate) as Date?) }
+
+        guard let index = OccurrenceSelector.matchIndex(id: id, occurrence: occurrence, candidates: keys) else {
+            return .failure(.message("No occurrence of \(id) starts at \(occurrenceInput)."))
+        }
+        return .success(candidates[index])
+    }
 }

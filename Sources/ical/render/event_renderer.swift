@@ -71,6 +71,15 @@ struct EventRenderer {
                     print("Notes: \(notes)")
                 }
 
+                if let identifier = nonEmpty(event.eventIdentifier) {
+                    print("ID: \(identifier)")
+                }
+
+                if event.hasRecurrenceRules,
+                    let occurrenceDate = event.occurrenceDate ?? event.startDate {
+                    print("Occurrence: \(OccurrenceSelector.token(for: occurrenceDate))")
+                }
+
                 if eventIndex < dayEvents.count - 1 {
                     print("")
                 }

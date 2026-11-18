@@ -95,7 +95,10 @@ struct RemoveOptions {
 
 /// Options for the `edit` subcommand. Only non-nil fields are applied as updates.
 struct EditOptions {
-    let id: String
+    let id: String?
+    let matchTitle: String?
+    let matchStartInput: String?
+    let matchCalendar: String?
     let occurrenceInput: String?
     let title: String?
     let startInput: String?

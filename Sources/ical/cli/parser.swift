@@ -348,6 +348,9 @@ struct CommandParser {
     /// Parses `--key value` pairs from the argument list into `EditOptions`.
     private func parseEditOptions(_ arguments: [String]) -> Result<EditOptions, CLIError> {
         var id: String?
+        var matchTitle: String?
+        var matchStartInput: String?
+        var matchCalendar: String?
         var occurrenceInput: String?
         var title: String?
         var startInput: String?
@@ -382,6 +385,22 @@ struct CommandParser {
                     return .failure(.message("Missing value for --id"))
                 }
                 id = finalValue
+
+            case "--match-title", "--match-start", "--match-calendar":
+                guard let value = collectOptionValue(from: arguments, index: &index), let finalValue = nonEmpty(value) else {
+                    return .failure(.message("Missing value for \(token)"))
+                }
+                switch token {
+                case "--match-title":
+                    guard matchTitle == nil else { return .failure(.message("Duplicate option: --match-title")) }
+                    matchTitle = finalValue
+                case "--match-start":
+                    guard matchStartInput == nil else { return .failure(.message("Duplicate option: --match-start")) }
+                    matchStartInput = finalValue
+                default:
+                    guard matchCalendar == nil else { return .failure(.message("Duplicate option: --match-calendar")) }
+                    matchCalendar = finalValue
+                }
 
             case "--occurrence":
                 guard occurrenceInput == nil else {
@@ -503,10 +522,6 @@ struct CommandParser {
             }
         }
 
-        guard let id else {
-            return .failure(.message("Missing required option: --id"))
-        }
-
         guard !(makeAllDay && makeTimed) else {
             return .failure(.message("--all-day and --timed cannot be used together."))
         }
@@ -540,6 +555,20 @@ struct CommandParser {
             recurrenceSpan = .automatic
         }
 
+        let hasSelector = matchTitle != nil || matchStartInput != nil || matchCalendar != nil
+        if id != nil {
+            guard !hasSelector else {
+                return .failure(.message("Use either --id or --match-title/--match-start, not both."))
+            }
+        } else {
+            guard matchTitle != nil, matchStartInput != nil else {
+                return .failure(.message("Missing selector. Use --id or --match-title with --match-start."))
+            }
+            guard occurrenceInput == nil else {
+                return .failure(.message("--occurrence requires --id; --match-start already names the instance."))
+            }
+        }
+
         let hasUpdate =
             title != nil ||
             startInput != nil ||
@@ -561,6 +590,9 @@ struct CommandParser {
         return .success(
             EditOptions(
                 id: id,
+                matchTitle: matchTitle,
+                matchStartInput: matchStartInput,
+                matchCalendar: matchCalendar,
                 occurrenceInput: occurrenceInput,
                 title: title,
                 startInput: startInput,

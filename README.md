@@ -138,6 +138,15 @@ ical edit \
   --notes "Updated notes"
 ```
 
+Without an ID, select the event by its title and current start (and optionally its calendar). This moves it in place:
+
+```bash
+ical edit --match-title "Gym" --match-start "today 18:30" --match-calendar "Home" \
+  --start "today 18:00" --end "today 20:00" --this-only
+```
+
+The selector must match exactly one event; for a recurring series it picks the instance starting at `--match-start`.
+
 Edit supports these optional flags:
 
 - `--title`, `--start`, `--end`, `--calendar`, `--location`, `--notes`

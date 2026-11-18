@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+- `edit` can select an event without an ID: `--match-title <text> --match-start <datetime> [--match-calendar <name>]` finds the single event (or recurring instance) starting then and edits it in place, so a move is one `edit` rather than `add` plus `remove`. `--title`, `--start` and `--calendar` keep meaning the new values.
+
 ## [0.3.0] - 2026-11-02
 
 - `today`, `tomorrow`, and `week` now print each event's `ID:` so listings lead directly to `edit`/`remove --id` (issue #3).

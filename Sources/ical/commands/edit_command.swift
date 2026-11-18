@@ -24,7 +24,15 @@ extension ICalApp {
     /// - Returns: The updated event's identifier on success, or a `CLIError` on failure.
     private func editEvent(with options: EditOptions) -> Result<String?, CLIError> {
         let event: EKEvent
-        switch resolveEvent(id: options.id, occurrenceInput: options.occurrenceInput, selection: options.recurrenceSpan) {
+        let resolution: Result<EKEvent, CLIError>
+        if let id = options.id {
+            resolution = resolveEvent(id: id, occurrenceInput: options.occurrenceInput, selection: options.recurrenceSpan)
+        } else if let matchTitle = options.matchTitle, let matchStartInput = options.matchStartInput {
+            resolution = findEvent(title: matchTitle, startInput: matchStartInput, calendarName: options.matchCalendar)
+        } else {
+            resolution = .failure(.message("Missing selector. Use --id or --match-title with --match-start."))
+        }
+        switch resolution {
         case .success(let resolved):
             event = resolved
         case .failure(let error):

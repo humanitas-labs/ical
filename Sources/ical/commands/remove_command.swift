@@ -33,6 +33,17 @@ extension ICalApp {
             return .failure(.message("Missing selector. Use --id or --title with --start."))
         }
 
+        switch findEvent(title: title, startInput: startInput, calendarName: options.calendarName) {
+        case .success(let event):
+            return removeEvent(event, selection: options.recurrenceSpan)
+        case .failure(let error):
+            return .failure(error)
+        }
+    }
+
+    /// Finds the single event with this title starting at this time (optionally in this calendar).
+    /// For a recurring series the match is the instance starting then. Fails on zero or several matches.
+    func findEvent(title: String, startInput: String, calendarName: String?) -> Result<EKEvent, CLIError> {
         guard let startDate = dateParser.parse(startInput) else {
             return .failure(.message("Could not parse --start value: \(startInput)"))
         }
@@ -56,7 +67,7 @@ extension ICalApp {
                 return false
             }
 
-            if let calendarName = options.calendarName {
+            if let calendarName {
                 return event.calendar.title.localizedCaseInsensitiveCompare(calendarName)
                     == .orderedSame
             }
@@ -71,11 +82,11 @@ extension ICalApp {
         guard matches.count == 1 else {
             return .failure(
                 .message(
-                    "Multiple matching events found (\(matches.count)). Use --id to remove a specific event."
+                    "Multiple matching events found (\(matches.count)). Use --id to target a specific event."
                 ))
         }
 
-        return removeEvent(matches[0], selection: options.recurrenceSpan)
+        return .success(matches[0])
     }
 
     /// Deletes a single event from the event store.
